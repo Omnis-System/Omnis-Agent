@@ -78,7 +78,7 @@ sub run_agent {
     my $app = builder {
         enable 'AccessLog'; # fixme
         enable 'Lint';      # fixme
-        enable 'StackTrace'; # fixme
+        enable 'StackTrace', force => 1; # fixme
         enable 'Plack::Middleware::Static',
             path => qr{^(?:/static/)},
                 root => File::Spec->catdir(dirname(__FILE__), '..');

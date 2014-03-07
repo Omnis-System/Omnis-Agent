@@ -7,6 +7,12 @@ use File::Spec;
 
 # dispatcher
 use Omnis::Agent::Web::Dispatcher;
+
+# Omnis::Agent::Web::Dispatcher::get '/hok' => sub {
+#     my ($c) = @_;
+#     return $c->render_json({message => "hoooooooooooook"});
+# };
+
 sub dispatch {
     return (Omnis::Agent::Web::Dispatcher->dispatch($_[0]) or die "response is not generated");
 }
@@ -14,7 +20,7 @@ sub dispatch {
 # load plugins
 __PACKAGE__->load_plugins(
     # 'Web::FillInFormLite',
-    'Web::JSON',
+    'Web::JSON' => { status_code_field => 'status' },
     'Web::NoCache',
     # '+Omnis::Agent::Web::Plugin::Session',
 );
