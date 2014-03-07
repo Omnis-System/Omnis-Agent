@@ -121,9 +121,9 @@ HIROSE Masaaki E<lt>hirose31@gmail.comE<gt>
 
 =head1 REPOSITORY
 
-L<https://github.com/hirose31/Omnis>
+L<https://github.com/Omnis-System/Omnis-Agent>
 
-    git clone https://github.com/hirose31/Omnis.git
+    git clone https://github.com/Omnis-System/Omnis-Agent.git
 
 patches and collaborators are welcome.
 

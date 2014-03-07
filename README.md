@@ -57,9 +57,9 @@ HIROSE Masaaki <hirose31@gmail.com>
 
 # REPOSITORY
 
-[https://github.com/hirose31/Omnis](https://github.com/hirose31/Omnis)
+[https://github.com/Omnis-System/Omnis-Agent](https://github.com/Omnis-System/Omnis-Agent)
 
-    git clone https://github.com/hirose31/Omnis.git
+    git clone https://github.com/Omnis-System/Omnis-Agent.git
 
 patches and collaborators are welcome.
 
