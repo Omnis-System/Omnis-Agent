@@ -1,0 +1,60 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use utf8;
+use Carp;
+
+use FindBin;
+use File::Spec;
+use lib map {File::Spec->catfile($FindBin::Bin, @$_)}
+    [qw(.. lib)], [qw(.. extra-metrics)];
+
+use Plack::Util;
+use Proclet;
+use Log::Minimal;
+
+use Omnis;
+use Omnis::Util;
+
+my $c = Omnis->bootstrap;
+
+my $proclet = Proclet->new(
+    color => 1,
+);
+
+for my $metric (@{ $c->config->{async_metrics} }) {
+    add_metric($metric);
+}
+
+$proclet->run;
+
+sub add_metric {
+    my $metric = shift;
+    infof("Add metric: %s", $metric);
+    $proclet->service(
+        code => sub {
+            my $class  = Plack::Util::load_class($metric, 'Omnis::Metric');
+            my $worker = $class->new($c->config);
+            local $0 = "$0 $metric";
+            $worker->run;
+        },
+        worker => 1,
+        tag => $metric,
+    );
+}
+
+__END__
+
+# for Emacsen
+# Local Variables:
+# mode: cperl
+# cperl-indent-level: 4
+# cperl-close-paren-offset: -4
+# cperl-indent-parens-as-block: t
+# indent-tabs-mode: nil
+# coding: utf-8
+# End:
+
+# vi: set ts=4 sw=4 sts=0 et ft=perl fenc=utf-8 :

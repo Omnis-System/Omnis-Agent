@@ -1,16 +1,20 @@
 # -*- mode: cperl -*-
 
-requires 'perl', '5.008005';
+requires 'perl', '5.010_001';
 
-# requires 'Foo', '== 0.1';        # specific version
-# requires 'Foo', '0.1';           # minimum
-# requires 'Bar', '>= 0.1, < 0.4'; # min-max
-
-# develop   = author_requires
-# configure = configure_requires
-# build     = build_requires
-# runtime   = requires (default)
-# test      = test_requires
+requires 'Amon2', '6.02';
+requires 'DBD::SQLite', '1.33';
+requires 'HTML::FillInForm::Lite', '1.11';
+requires 'HTTP::Session2', '0.04';
+requires 'JSON', '2.50';
+requires 'Module::Functions', '2';
+requires 'Plack::Middleware::ReverseProxy', '0.09';
+requires 'Router::Boom', '0.06';
+requires 'Starlet', '0.20';
+requires 'Teng', '0.18';
+requires 'Test::WWW::Mechanize::PSGI';
+requires 'Text::Xslate', '2.0009';
+requires 'Time::Piece', '1.20';
 
 on configure => sub {
     requires 'Module::Build::Tiny', '0.030';
