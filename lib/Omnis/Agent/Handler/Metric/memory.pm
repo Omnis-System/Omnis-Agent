@@ -1,56 +1,53 @@
-package Omnis::Agent::Util;
+package Omnis::Agent::Handler::Metric::memory;
 
 use strict;
 use warnings;
 use 5.010;
 use Carp;
 
-use parent qw(Exporter);
-our @EXPORT = qw(p to_byte);
+our $VERSION = '0.001';
 
-use Data::Dumper;
+use parent qw(Omnis::Agent::Handler::Metric::Base);
 
-sub p(@) {
-    local $Data::Dumper::Indent    = 1;
-    local $Data::Dumper::Deepcopy  = 1;
-    local $Data::Dumper::Sortkeys  = 1;
-    local $Data::Dumper::Terse     = 1;
-    local $Data::Dumper::Useqq     = 0;
-    local $Data::Dumper::Quotekeys = 0;
+use Log::Minimal;
 
-    my $d =  Dumper(\@_);
-    # $d =~ s/\\x{([0-9a-z]+)}/chr(hex($1))/ge;
-    print STDERR $d;
-}
+use Omnis::Agent::Util;
 
-# Convert string like a "123 KB" into as byte
-sub to_byte {
-    my $s = shift;
-    my $b = 0;
+# fixme support multi platform/OS
 
-    ($s) = ($s =~ /^\s*(.+?)\s*$/); # trim
+our %ITEM = (
+    MemTotal  => 'total',
+    MemFree   => 'free',
+    Buffers   => 'buffers',
+    Cached    => 'cached',
+    SwapTotal => 'total',
+    SwapFree  => 'free',
+    Inactive  => 'inactive',
+);
+# "used" and "swap_used" are caluculated at last
+my $item_re = '^(?:' . join('|', keys %ITEM) . '):';
 
-    if ($s =~ /^[0-9]+$/) {
-        $b = $s;
-    } elsif ($s =~ /^([0-9]+)\s*([a-zA-Z]+)$/) {
-        $b = $1;
-        my $u = lc $2;
-        if ($u eq 'kb') {
-            $b = $b * 1024;
-        } elsif ($u eq 'mb') {
-            $b = $b * 1024 * 1024;
-        } elsif ($u eq 'gb') {
-            $b = $b * 1024 * 1024 * 1024;
-        } elsif ($u eq 'tb') {
-            $b = $b * 1024 * 1024 * 1024 * 1024;
-        } else {
-            warnf("Unknown unit: %s", $u);
-        }
-    } else {
-        warnf("Failed to convert into as byte: %s", $s);
+sub metric {
+    my $metric = {};
+
+    open my $fh, '<', '/proc/meminfo' or do {
+        critf("%s", $!);
+        return;
+    };
+    while (<$fh>) {
+        next unless /$item_re/;
+        chomp;
+        my($key, $val) = split /[\s:]+/, $_, 2;
+
+        $metric->{$key =~ /^Swap/ ? 'swap' : 'memory' }{ $ITEM{$key} || "${key}_OOPS" } = to_byte($val);
     }
+    close $fh;
 
-    return $b;
+    $metric->{memory}{used} = $metric->{memory}{total} - $metric->{memory}{free} - $metric->{memory}{inactive};
+
+    $metric->{swap}{used} = $metric->{swap}{total} - $metric->{swap}{free};
+
+    return $metric;
 }
 
 1;
