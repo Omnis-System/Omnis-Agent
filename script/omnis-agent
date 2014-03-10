@@ -91,34 +91,32 @@ sub run_agent {
 
         Omnis::Agent::Web->to_app();
     };
-#    unless (caller) {
-        my $host        = $opt->{host};
-        my $port        = $opt->{port};
-        my $config_file = $opt->{config};
 
-        if ($config_file) {
-            my $config = do $config_file;
-            Carp::croak("$config_file: $@") if $@;
-            Carp::croak("$config_file: $!") unless defined $config;
-            unless ( ref($config) eq 'HASH' ) {
-                Carp::croak("$config_file does not return HashRef.");
-            }
-            no warnings 'redefine';
-            no warnings 'once';
-            *Omnis::Agent::load_config = sub { $config }
+    my $host        = $opt->{host};
+    my $port        = $opt->{port};
+    my $config_file = $opt->{config};
+
+    if ($config_file) {
+        my $config = do $config_file;
+        Carp::croak("$config_file: $@") if $@;
+        Carp::croak("$config_file: $!") unless defined $config;
+        unless ( ref($config) eq 'HASH' ) {
+            Carp::croak("$config_file does not return HashRef.");
         }
+        no warnings 'redefine';
+        no warnings 'once';
+        *Omnis::Agent::load_config = sub { $config }
+    }
 
-        infof("Omnis::Agent: http://${host}:${port}/");
+    infof("Omnis::Agent: http://${host}:${port}/");
 
-        my $loader = Plack::Loader->load(
-            'Starlet',
-            port        => $port,
-            host        => $host,
-            max_workers => $opt->{'max-workers'},
-        );
-        return $loader->run($app);
-#    }
-    return $app;
+    my $loader = Plack::Loader->load(
+        'Starlet',
+        port        => $port,
+        host        => $host,
+        max_workers => $opt->{'max-workers'},
+    );
+    return $loader->run($app);
 }
 
 __END__
