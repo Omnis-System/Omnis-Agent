@@ -26,53 +26,92 @@ sub process {
     };
 
     if ($method eq 'GET') {
-        if (defined $req->param('stat')) {
-            infof("stat");
-            my $st = stat($path) or do {
-                $res->{message} = $!;
+        my $st = lstat($path) or do {
+            $res->{message} = $!;
 
-                my $errno = POSIX::errno;
-                if ($errno == EACCES) {
-                    $res->{status}  = 403;
-                } elsif ($errno == ENOENT) {
-                    $res->{status}  = 404;
-                } else {
-                    $res->{status}  = 400;
-                }
+            my $errno = POSIX::errno;
+            if ($errno == EACCES) {
+                $res->{status}  = 403;
+            } elsif ($errno == ENOENT) {
+                $res->{status}  = 404;
+            } else {
+                $res->{status}  = 400;
+            }
 
-                goto RETURN;
-            };
+            goto RETURN;
+        };
 
-            $res->{$_} = $st->$_ for qw(nlink uid gid size mtime ctime blksize blocks);
-
-            $res->{mode}  = substr(sprintf("%o", $st->mode), -4);
-            $res->{user}  = getpwuid($st->uid);
-            $res->{group} = getgrgid($st->gid);
-            $res->{type}  = do {
-                if (S_ISREG($st->mode)) {
-                    "file";
-                } elsif (S_ISDIR($st->mode)) {
-                    "directory";
-                } elsif (S_ISLNK($st->mode)) {
-                    "link";
-                } elsif (S_ISBLK($st->mode)) {
-                    "block";
-                } elsif (S_ISCHR($st->mode)) {
-                    "character";
-                } elsif (S_ISFIFO($st->mode)) {
-                    "fifo";
-                } elsif (S_ISSOCK($st->mode)) {
-                    "socket";
-                } else {
-                    "unknown";
-                }
-            };
-
-            return $res;
-        } else {
-            infof("content");
-            ; # fixme
+        if (S_ISLNK($st->mode)) {
+            if (my $symlink_to = readlink $path) {
+                $res->{symlink_to} = $symlink_to;
+            }
+            $st = stat($path);
         }
+
+        $res->{$_} = $st->$_ for qw(nlink uid gid size mtime ctime blksize blocks);
+
+        $res->{mode}  = substr(sprintf("%o", $st->mode), -4);
+        $res->{user}  = getpwuid($st->uid);
+        $res->{group} = getgrgid($st->gid);
+        $res->{type}  = do {
+            if (S_ISREG($st->mode)) {
+                "file";
+            } elsif (S_ISDIR($st->mode)) {
+                "directory";
+            } elsif (S_ISBLK($st->mode)) {
+                "block";
+            } elsif (S_ISCHR($st->mode)) {
+                "character";
+            } elsif (S_ISFIFO($st->mode)) {
+                "fifo";
+            } elsif (S_ISSOCK($st->mode)) {
+                "socket";
+            } else {
+                "unknown";
+            }
+        };
+
+        if (! defined $req->param('stat')) {
+            $res->{content} = [];
+
+            if (S_ISREG($st->mode)) {
+                open my $fh, '<', $path or do { # fixme ↑と重複してる
+                    $res->{message} = $!;
+
+                    my $errno = POSIX::errno;
+                    if ($errno == EACCES) {
+                        $res->{status}  = 403;
+                    } elsif ($errno == ENOENT) {
+                        $res->{status}  = 404;
+                    } else {
+                        $res->{status}  = 400;
+                    }
+
+                    goto RETURN;
+                };
+                push @{ $res->{content} }, <$fh>;
+                close $fh;
+            } elsif (S_ISDIR($st->mode)) {
+                opendir my $dh, $path or do { # fixme ↑と重複してる
+                    $res->{message} = $!;
+
+                    my $errno = POSIX::errno;
+                    if ($errno == EACCES) {
+                        $res->{status}  = 403;
+                    } elsif ($errno == ENOENT) {
+                        $res->{status}  = 404;
+                    } else {
+                        $res->{status}  = 400;
+                    }
+
+                    goto RETURN;
+                };
+                push @{ $res->{content} }, grep !/^\.{1,2}$/, readdir $dh;
+                close $dh;
+            }
+        }
+
+        return $res;
     }
 
  RETURN:
