@@ -6,8 +6,6 @@ use 5.010;
 use Carp;
 use utf8;
 
-our $VERSION = '0.001';
-
 use Log::Minimal;
 
 use Omnis::Agent::Util;

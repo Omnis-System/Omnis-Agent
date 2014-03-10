@@ -4,8 +4,7 @@ use strict;
 use warnings;
 use 5.010;
 use Carp;
-
-our $VERSION = '0.001';
+use utf8;
 
 use Log::Minimal;
 use IPC::Run;

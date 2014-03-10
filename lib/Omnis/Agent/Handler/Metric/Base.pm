@@ -4,8 +4,7 @@ use strict;
 use warnings;
 use 5.010;
 use Carp;
-
-use Omnis::Agent::Util;
+use utf8;
 
 sub new {
     my($class, $config) = @_;

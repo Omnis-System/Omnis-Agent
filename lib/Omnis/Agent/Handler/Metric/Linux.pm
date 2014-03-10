@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use 5.010;
 use Carp;
+use utf8;
 
 use parent qw(Omnis::Agent::Handler::Metric::Base);
 

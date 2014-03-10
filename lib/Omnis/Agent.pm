@@ -1,9 +1,13 @@
 package Omnis::Agent;
+
 use strict;
 use warnings;
-use utf8;
-our $VERSION='0.01';
 use 5.010;
+use Carp;
+use utf8;
+
+our $VERSION='0.01';
+
 # use Omnis::Agent::DB::Schema;
 # use Omnis::Agent::DB;
 
