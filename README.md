@@ -1,78 +1,173 @@
-<a href="https://travis-ci.org/hirose31/Omnis"><img src="https://travis-ci.org/hirose31/Omnis.png?branch=master" alt="Build Status" /></a>
-<a href="https://coveralls.io/r/hirose31/Omnis?branch=master"><img src="https://coveralls.io/repos/hirose31/Omnis/badge.png?branch=master" alt="Coverage Status" /></a>
+# Omnis::Agent
 
-# NAME
+## NOTICE
 
-Omnis - fixme
+Omnis::Agent is **still ALPHA quality**. **Any API will change without notice**.
 
-# INSTALLATION
+## About
 
-To install this module, run the following commands:
+Omnis::Agent provides following HTTP API, by running on each of servers.
 
-    perl Build.PL
-    ./Build
-    ./Build test
-    ./Build install
+- returns system metrics
+    - memory, CPU usage and so on, like SNMP
+- manupulate files/directories
+    - returns information on a file/directory
+    - returns content of a file/directory
+    - creates and deletes a file/directory
+- performs command and returns that result (STDOUT/STDERR)
+    - like RPC
 
-# SYNOPSIS
+## Quick Start
 
-    use Omnis;
-    fixme
+```
+git clone https://github.com/Omnis-System/Omnis-Agent.git
+cd Omnis-Agent
+cpanm -L extlib --installdeps .
 
-# DESCRIPTION
+perl script/omnis-agent --host 127.0.0.1
+```
 
-Omnis is fixme
+Omnis::Agent listens 4649 port by default.
 
-# METHODS
 
-## Class Methods
+### Retrieve System Metrics
 
-### __new__(%args:Hash) :Omnis
+```
+curl http://127.0.0.1:4649/metric/memory
+{
+  "swap": {
+    "total": 1959784448,
+    "used": 0,
+    "free": 1959784448
+  },
+  "memory": {
+    "cached": 4621635584,
+    "total": 16817000448,
+    "used": 6047027200,
+    "inactive": 2960449536,
+    "free": 7809523712,
+    "buffers": 1749143552
+  }
+}
+```
 
-Creates and returns a new InfluxDB client instance. Dies on errors.
+### Manupulate files/directories
 
-%args is following:
+Retrieve information of specified file:
+```
+curl http://127.0.0.1:4649/fs/etc/passwd?stat
+{
+  "gid": 0,
+  "type": "file",
+  "user": "root",
+  "group": "root",
+  "nlink": 1,
+  "size": 2417,
+  "blksize": 4096,
+  "ctime": 1383634873,
+  "blocks": 8,
+  "uid": 0,
+  "mode": "0644",
+  "mtime": 1383634873,
+  "status": 200,
+  "path": "/etc/passwd"
+}
+```
 
-- hostname => Str ("127.0.0.1")
+Retrieve with content of specified file:
+```
+curl http://127.0.0.1:4649/fs/etc/passwd
+{
+  "gid": 0,
+  "type": "file",
+  "user": "root",
+  "group": "root",
+  "nlink": 1,
+  "size": 2417,
+  "path": "/etc/passwd",
+  "blksize": 4096,
+  "ctime": 1383634873,
+  "blocks": 8,
+  "uid": 0,
+  "mode": "0644",
+  "mtime": 1383634873,
+  "status": 200,
+  "content": [
+    "root:x:0:0:root:/root:/bin/bash\n",
+    ...
+  ]
+}
+```
 
-## Instance Methods
+Create a new file:
+```
+echo 'Hello, Omnis!' | curl -X PUT -T - http://127.0.0.1:4649/fs/tmp/test
+{
+  "path": "/tmp/test",
+  "status": 200
+}
 
-### __method\_name__($message:Str) :Bool
+ curl http://127.0.0.1:4649/fs/tmp/test
+{
+  "gid": 2050,
+  "type": "file",
+  "user": "hirose31",
+  "group": "hirose31",
+  "nlink": 1,
+  "size": 14,
+  "path": "/tmp/test",
+  "blksize": 4096,
+  "ctime": 1394441342,
+  "blocks": 8,
+  "uid": 2050,
+  "mode": "0664",
+  "mtime": 1394441342,
+  "status": 200,
+  "content": [
+    "Hello, Omnis!\n"
+  ]
+}
+```
 
-# ENVIRONMENT VARIABLES
+### perform command on that server
 
-- HOME
+specify an absolute path of command:
+```
+curl http://127.0.0.1:4649/cmd/bin/date
+{
+  "stdout": [
+    "Mon Mar 10 17:49:53 JST 2014\n"
+  ],
+  "path": "/bin/date",
+  "status": 200,
+  "stderr": []
+}
+```
 
-    Used to determine the user's home directory.
+or can search in ```$PATH```:
+```
+curl http://127.0.0.1:4649/cmd/date
+{
+  "stdout": [
+    "Mon Mar 10 17:49:53 JST 2014\n"
+  ],
+  "path": "/bin/date",
+  "status": 200,
+  "stderr": []
+}
+```
 
-# FILES
+with arguments:
+```
+curl 'http://127.0.0.1:4649/cmd/bin/date?arg=--rfc-3339=seconds'
+{
+  "stdout": [
+    "2014-03-10 17:51:46+09:00\n"
+  ],
+  "path": "/bin/date",
+  "status": 200,
+  "stderr": []
+}
+```
 
-- `/path/to/config.ph`
 
-    設定ファイル。
-
-# AUTHOR
-
-HIROSE Masaaki <hirose31@gmail.com>
-
-# REPOSITORY
-
-[https://github.com/Omnis-System/Omnis-Agent](https://github.com/Omnis-System/Omnis-Agent)
-
-    git clone https://github.com/Omnis-System/Omnis-Agent.git
-
-patches and collaborators are welcome.
-
-# SEE ALSO
-
-[Module::Hoge](https://metacpan.org/pod/Module::Hoge),
-ls(1), cd(1)
-
-# COPYRIGHT
-
-Copyright HIROSE Masaaki
-
-# LICENSE
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.

@@ -1,5 +1,5 @@
 {
-   "abstract" : "fixme",
+   "abstract" : "Omnis::Agent",
    "author" : [
       "HIROSE Masaaki <hirose31@gmail.com>"
    ],
@@ -40,7 +40,21 @@
       },
       "runtime" : {
          "requires" : {
-            "perl" : "5.008005"
+            "Amon2" : "6.02",
+            "DBD::SQLite" : "1.33",
+            "Data::Validator" : "0",
+            "HTML::FillInForm::Lite" : "1.11",
+            "HTTP::Session2" : "0.04",
+            "JSON" : "2.50",
+            "Module::Functions" : "2",
+            "Plack::Middleware::ReverseProxy" : "0.09",
+            "Router::Boom" : "0.06",
+            "Starlet" : "0.20",
+            "Teng" : "0.18",
+            "Test::WWW::Mechanize::PSGI" : "0",
+            "Text::Xslate" : "2.0009",
+            "Time::Piece" : "1.20",
+            "perl" : "5.010"
          }
       },
       "test" : {
@@ -50,6 +64,17 @@
       }
    },
    "release_status" : "stable",
-   "version" : "0.001"
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/Omnis-System/Omnis-Agent/issues"
+      },
+      "homepage" : "https://github.com/Omnis-System/Omnis-Agent",
+      "repository" : {
+         "type" : "git",
+         "url" : "https://github.com/Omnis-System/Omnis-Agent.git",
+         "web" : "https://github.com/Omnis-System/Omnis-Agent"
+      }
+   },
+   "version" : "0.01"
 }
 

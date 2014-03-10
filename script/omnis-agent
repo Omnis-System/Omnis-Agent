@@ -27,7 +27,7 @@ use File::Basename;
 use FindBin;
 use File::Spec;
 use lib map {File::Spec->catfile($FindBin::Bin, @$_)}
-    [qw(.. lib)], [qw(.. extra-handler)];
+    [qw(.. lib)], [qw(.. extra-handler)], [qw(.. extlib lib perl5)];
 
 use Data::Validator;
 use Log::Minimal;

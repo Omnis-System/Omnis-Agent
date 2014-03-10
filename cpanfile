@@ -1,7 +1,8 @@
 # -*- mode: cperl -*-
 
-requires 'perl', '5.010_001';
+requires 'perl', '5.010';
 
+# fixme
 requires 'Amon2', '6.02';
 requires 'DBD::SQLite', '1.33';
 requires 'HTML::FillInForm::Lite', '1.11';
@@ -15,6 +16,14 @@ requires 'Teng', '0.18';
 requires 'Test::WWW::Mechanize::PSGI';
 requires 'Text::Xslate', '2.0009';
 requires 'Time::Piece', '1.20';
+
+requires 'Data::Validator';
+requires 'Log::Minimal';
+requires 'Proclet';
+requires 'IO::File::AtomicChange';
+requires 'IPC::Cmd';
+requires 'IPC::Run';
+
 
 on configure => sub {
     requires 'Module::Build::Tiny', '0.030';

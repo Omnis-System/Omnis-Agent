@@ -43,5 +43,23 @@ This is a main context class for Omnis::Agent
 
 =head1 AUTHOR
 
-Omnis::Agent authors.
+HIROSE Masaaki E<lt>hirose31@gmail.comE<gt>
 
+=head1 REPOSITORY
+
+L<https://github.com/Omnis-System/Omnis-Agent>
+
+    git clone https://github.com/Omnis-System/Omnis-Agent.git
+
+patches and collaborators are welcome.
+
+=head1 COPYRIGHT
+
+Copyright HIROSE Masaaki
+
+=head1 LICENSE
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut
