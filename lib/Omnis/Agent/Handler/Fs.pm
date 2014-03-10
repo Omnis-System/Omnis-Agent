@@ -11,6 +11,8 @@ use Log::Minimal;
 use File::stat;
 use Fcntl qw(:mode);
 use POSIX qw(:errno_h);
+use IO::File::AtomicChange;
+
 use Omnis::Agent::Util;
 
 sub process {
@@ -112,6 +114,35 @@ sub process {
         }
 
         return $res;
+    } elsif ($method eq 'PUT') {
+        # fixme mkdir?
+        # fixme specify mode,
+        # fixme backup_dir を conf で指定可能にする で、自動でmkdirする
+        # fixme 任意のファイルの書き換えはin-house useとは危険すぎるので、
+        # 指定したディレクトリ配下のだけ書き換え可能とか制限が必要
+        my $content = $req->content;
+
+        my $fh = IO::File::AtomicChange->new($path, "w",
+                                         { backup_dir => "/var/tmp/bk" })
+            or do {
+                $res->{message} = $!;
+
+                my $errno = POSIX::errno;
+                if ($errno == EACCES) {
+                    $res->{status}  = 403;
+                } elsif ($errno == ENOENT) {
+                    $res->{status}  = 404;
+                } else {
+                    $res->{status}  = 400;
+                }
+
+                goto RETURN;
+            };
+        $fh->print($content);
+        $fh->close;
+
+        # my $qs = $req->query_parameters;
+        # p $qs;
     }
 
  RETURN:
