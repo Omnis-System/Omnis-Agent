@@ -70,6 +70,27 @@ sub loadavg {
     return $metric;
 }
 
+sub system {
+    my($self) = @_;
+
+    my $metric = {};
+
+    open my $fh, '<', '/proc/stat' or do {
+        return { status => 500, message => $! }; # fixme
+    };
+    while (<$fh>) {
+        next if /^cpu/;
+        chomp;
+        my($key, @val) = split /\s+/;
+        if ($key =~ /^(?:intr|ctxt|btime|processes|procs_running|procs_blocked|softirq)$/) {
+            $metric->{$key} = $val[0];
+        }
+    }
+    close $fh;
+
+    return $metric;
+}
+
 1;
 
 __END__
