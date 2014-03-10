@@ -5,6 +5,8 @@ use warnings;
 use 5.010;
 use Carp;
 
+use Omnis::Agent::Util;
+
 sub new {
     my($class, $config) = @_;
 
@@ -20,7 +22,7 @@ sub new {
     return $self;
 }
 
-sub metric { croak "override me" }
+sub memory { croak "override me" }
 
 1;
 

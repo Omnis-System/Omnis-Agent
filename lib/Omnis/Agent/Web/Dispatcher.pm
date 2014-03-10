@@ -3,12 +3,16 @@ package Omnis::Agent::Web::Dispatcher;
 use strict;
 use warnings;
 use 5.010;
+use Carp;
 use utf8;
 
 use Amon2::Web::Dispatcher::RouterBoom;
+use Log::Minimal;
+
 use Omnis::Agent::Util;
 use Omnis::Agent::Handler::Fs;
 use Omnis::Agent::Handler::Command;
+use Omnis::Agent::Handler::Metric;;
 
 any '/' => sub {
     my($c) = @_;
@@ -20,18 +24,27 @@ get '/metric/{metric}' => sub {
     my($c, $p) = @_;
 
     my $metric = lc $p->{metric};
-    if (! $c->{metric}{$metric}) {
+
+    if (! $c->{handler}{metric}) {
         eval {
-            my $class = Plack::Util::load_class($metric, 'Omnis::Agent::Handler::Metric');
-            $c->{metric}{$metric} = $class->new($c->config);
+            $c->{handler}{metric} = Omnis::Agent::Handler::Metric->new();
         };
         if ($@) {
-            $c->{metric}{$metric} = undef;
+            $c->{handler}{metric} = undef;
+            debugf("XXX: %s", $@);
             return $c->res_404(); # fixme
         }
     }
 
-    my $res = $c->{metric}{$metric}->metric;
+    my $res;
+    if (my $impl = $c->{handler}{metric}->can($metric)) {
+        $res = $impl->();
+    } else {
+        $res = {
+            status  => 501,
+            message => 'Not Implemented',
+        };
+    }
 
     return ref($res) eq 'HASH' ? $c->render_json($res) : $res;
 };
