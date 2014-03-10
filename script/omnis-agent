@@ -62,7 +62,9 @@ MAIN: {
 
     debugf("opt: %s", ddf($opt));
 
-    my $proclet = Proclet->new;
+    my $proclet = Proclet->new(
+        color => 1,
+    );
 
     $proclet->service(
         code => sub { run_agent($opt) },
