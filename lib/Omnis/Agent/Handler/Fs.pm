@@ -9,6 +9,7 @@ our $VERSION = '0.001';
 
 use Log::Minimal;
 use File::stat;
+use Fcntl qw(:mode);
 use POSIX qw(:errno_h);
 use Omnis::Agent::Util;
 
@@ -47,10 +48,30 @@ sub process {
             $res->{mode}  = substr(sprintf("%o", $st->mode), -4);
             $res->{user}  = getpwuid($st->uid);
             $res->{group} = getgrgid($st->gid);
+            $res->{type}  = do {
+                if (S_ISREG($st->mode)) {
+                    "file";
+                } elsif (S_ISDIR($st->mode)) {
+                    "directory";
+                } elsif (S_ISLNK($st->mode)) {
+                    "link";
+                } elsif (S_ISBLK($st->mode)) {
+                    "block";
+                } elsif (S_ISCHR($st->mode)) {
+                    "character";
+                } elsif (S_ISFIFO($st->mode)) {
+                    "fifo";
+                } elsif (S_ISSOCK($st->mode)) {
+                    "socket";
+                } else {
+                    "unknown";
+                }
+            };
 
             return $res;
         } else {
             infof("content");
+            ; # fixme
         }
     }
 
