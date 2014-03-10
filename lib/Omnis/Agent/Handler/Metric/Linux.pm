@@ -47,6 +47,29 @@ sub memory {
     return $metric;
 }
 
+sub loadavg {
+    my($self) = @_;
+
+    my $metric = {};
+
+    open my $fh, '<', '/proc/loadavg' or do {
+        return { status => 500, message => $! }; # fixme
+    };
+    while (<$fh>) {
+        if (my @e = split /\s+/) {
+            $metric = {
+                1  => $e[0],
+                5  => $e[1],
+                15 => $e[2],
+            };
+            last;
+        }
+    }
+    close $fh;
+
+    return $metric;
+}
+
 1;
 
 __END__

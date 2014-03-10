@@ -23,6 +23,32 @@ sub new {
 
 sub memory { croak "override me" }
 
+sub loadavg {
+    my($self) = @_;
+
+    my $metric = {};
+
+    my @buf = qx{uptime};
+    if ($? != 0) {
+        return { status => 500, message => $! }; # fixme
+    }
+
+    for (@buf) {
+        if (/load average:\s*(.+)$/) {
+            my @lav = split /,\s*/, $1;
+            $metric = {
+                1  => $lav[0],
+                5  => $lav[1],
+                15 => $lav[2],
+            };
+            last;
+        }
+    }
+
+
+    return $metric;
+}
+
 1;
 
 __END__
