@@ -7,14 +7,15 @@ use Carp;
 use utf8;
 
 sub new {
-    my($class, $config) = @_;
+    my($class, $config, $os) = @_;
 
     my $metric = $class;
     $metric =~ s/^Omnis::Metric:://;
     $metric =~ s/::/-/g;
 
     my $self = bless {
-        %{ $config },
+        config => $config,
+        os     => $os,
         metric => $metric,
     }, $class;
 

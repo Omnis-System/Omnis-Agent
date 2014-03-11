@@ -11,9 +11,10 @@ use Log::Minimal;
 use Omnis::Agent::Util;
 
 sub new {
+    my($klass, $config) = @_;
     my $os = check_os();
     my $class = Plack::Util::load_class($os->{family}, 'Omnis::Agent::Handler::Metric');
-    return $class->new($os);
+    return $class->new($config, $os);
 }
 
 sub check_os {

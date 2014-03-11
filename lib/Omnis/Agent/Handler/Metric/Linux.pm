@@ -9,6 +9,7 @@ use utf8;
 use parent qw(Omnis::Agent::Handler::Metric::Base);
 
 use Omnis::Agent::Util;
+use Omnis::Agent::Handler::Metric::LinuxAsync;
 
 our %MEMORY_ITEM = (
     MemTotal  => 'total',

@@ -27,7 +27,7 @@ get '/metric/{metric}' => sub {
 
     if (! $c->{handler}{metric}) {
         eval {
-            $c->{handler}{metric} = Omnis::Agent::Handler::Metric->new();
+            $c->{handler}{metric} = Omnis::Agent::Handler::Metric->new($c->config);
         };
         if ($@) {
             $c->{handler}{metric} = undef;
@@ -37,8 +37,8 @@ get '/metric/{metric}' => sub {
     }
 
     my $res;
-    if (my $impl = $c->{handler}{metric}->can($metric)) {
-        $res = $impl->();
+    if ($c->{handler}{metric}->can($metric)) {
+        $res = $c->{handler}{metric}->$metric();
     } else {
         $res = {
             status  => 501,

@@ -62,21 +62,51 @@ MAIN: {
 
     debugf("opt: %s", ddf($opt));
 
+    my $config;
+    if ($opt->{config}) {
+        my $config_file = $opt->{config};
+        $config = do $config_file;
+        Carp::croak("$config_file: $@") if $@;
+        Carp::croak("$config_file: $!") unless defined $config;
+        unless ( ref($config) eq 'HASH' ) {
+            Carp::croak("$config_file does not return HashRef.");
+        }
+    }
+
     my $proclet = Proclet->new(
         color => 1,
     );
 
+    ### HTTP API server
     $proclet->service(
-        code => sub { run_agent($opt) },
+        code => sub { run_agent($opt, $config) },
         tag  => 'agent',
     );
+
+    ### asynchronous metrics
+    unless ($config) {
+        use Omnis::Agent;
+        my $c = Omnis::Agent->bootstrap();
+        $config = $c->config;
+    }
+    my $metric = Omnis::Agent::Handler::Metric->new($config || +{});
+    for my $async_metric ($metric->async_metrics) {
+        infof("Starting async metric collector: %s", $async_metric);
+        $proclet->service(
+            code => sub {
+                my $run = $async_metric . '_run';
+                $metric->$run();
+            },
+            tag  => 'async_metric-'.$async_metric,
+        );
+    }
 
     $proclet->run;
     exit 0;
 }
 
 sub run_agent {
-    my $opt = shift;
+    my($opt, $config) = @_;
     my $app = builder {
         enable 'AccessLog'; # fixme
         enable 'Lint';      # fixme
@@ -92,23 +122,16 @@ sub run_agent {
         Omnis::Agent::Web->to_app();
     };
 
-    my $host        = $opt->{host};
-    my $port        = $opt->{port};
-    my $config_file = $opt->{config};
+    my $host = $opt->{host};
+    my $port = $opt->{port};
 
-    if ($config_file) {
-        my $config = do $config_file;
-        Carp::croak("$config_file: $@") if $@;
-        Carp::croak("$config_file: $!") unless defined $config;
-        unless ( ref($config) eq 'HASH' ) {
-            Carp::croak("$config_file does not return HashRef.");
-        }
+    if ($config) {
         no warnings 'redefine';
         no warnings 'once';
         *Omnis::Agent::load_config = sub { $config }
     }
 
-    infof("Omnis::Agent: http://${host}:${port}/");
+    infof("Starting Omnis::Agent: http://${host}:${port}/");
 
     my $loader = Plack::Loader->load(
         'Starlet',

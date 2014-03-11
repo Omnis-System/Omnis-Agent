@@ -7,9 +7,10 @@ use Carp;
 use utf8;
 
 use parent qw(Exporter);
-our @EXPORT = qw(p to_byte);
+our @EXPORT = qw(p to_byte json);
 
 use Data::Dumper;
+use JSON 2 qw();
 
 sub p(@) {
     local $Data::Dumper::Indent    = 1;
@@ -52,6 +53,11 @@ sub to_byte {
     }
 
     return $b;
+}
+
+sub json() {
+    state $_json = JSON->new()->ascii(1);
+    return $_json;
 }
 
 1;

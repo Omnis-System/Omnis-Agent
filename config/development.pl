@@ -10,4 +10,9 @@ my $basedir = File::Spec->rel2abs(File::Spec->catdir(dirname(__FILE__), '..'));
     #         sqlite_unicode => 1,
     #     }
     # ],
+    metric => {
+        async => {
+            scoreboard => '/var/tmp/omnis-async',
+        },
+    },
 };
