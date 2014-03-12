@@ -89,6 +89,7 @@ sub _calc_cpu_usage {
     my $interval = $cur->{time} - $prev->{time};
 
     for my $key (grep !/^time$/, keys %$prev) {
+        next unless (defined $cur->{$key} && defined $prev->{$key});
         $usage->{$key} = sprintf "%.3f", ( ( ($cur->{$key} - $prev->{$key}) / $interval * 100 / $hz ) / $ncpu );
     }
     $usage->{time} = $cur->{time};
