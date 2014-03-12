@@ -23,7 +23,7 @@ requires 'Proclet';
 requires 'IO::File::AtomicChange';
 requires 'IPC::Cmd';
 requires 'IPC::Run';
-
+requires 'Parse::Daemontools::Service', '0.03';
 
 on configure => sub {
     requires 'Module::Build::Tiny', '0.030';

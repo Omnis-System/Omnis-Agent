@@ -12,6 +12,7 @@ use Log::Minimal;
 use Omnis::Agent::Util;
 use Omnis::Agent::Handler::Fs;
 use Omnis::Agent::Handler::Command;
+use Omnis::Agent::Handler::Daemontools;
 use Omnis::Agent::Handler::Metric;;
 
 any '/' => sub {
@@ -61,6 +62,14 @@ get '/cmd/{path:.*}' => sub {
     my($c, $p) = @_;
 
     my $res = Omnis::Agent::Handler::Command::process($c, $p);
+
+    return ref($res) eq 'HASH' ? $c->render_json($res) : $res;
+};
+
+get '/daemontools/{service}' => sub {
+    my($c, $p) = @_;
+
+    my $res = Omnis::Agent::Handler::Daemontools::process($c, $p);
 
     return ref($res) eq 'HASH' ? $c->render_json($res) : $res;
 };
