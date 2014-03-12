@@ -17,13 +17,14 @@ requires 'Test::WWW::Mechanize::PSGI';
 requires 'Text::Xslate', '2.0009';
 requires 'Time::Piece', '1.20';
 
-requires 'Data::Validator';
+requires 'Data::Validator', '1.03';
 requires 'Log::Minimal';
 requires 'Proclet';
 requires 'IO::File::AtomicChange';
 requires 'IPC::Cmd';
 requires 'IPC::Run';
 requires 'Parse::Daemontools::Service', '0.03';
+requires 'Parallel::Scoreboard', '0.04';
 
 on configure => sub {
     requires 'Module::Build::Tiny', '0.030';
