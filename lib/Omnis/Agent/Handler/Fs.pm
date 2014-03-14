@@ -73,7 +73,7 @@ sub process {
         };
 
         if (! defined $req->param('stat')) {
-            $res->{content} = [];
+            $res->{content} = "";
 
             if (S_ISREG($st->mode)) {
                 open my $fh, '<', $path or do { # fixme ↑と重複してる
@@ -90,7 +90,7 @@ sub process {
 
                     goto RETURN;
                 };
-                push @{ $res->{content} }, <$fh>;
+                $res->{content} = do { local $/; <$fh> };
                 close $fh;
             } elsif (S_ISDIR($st->mode)) {
                 opendir my $dh, $path or do { # fixme ↑と重複してる
