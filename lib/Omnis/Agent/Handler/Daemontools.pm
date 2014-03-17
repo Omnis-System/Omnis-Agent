@@ -15,9 +15,7 @@ use Omnis::Agent::Response;
 sub process {
     my($c, $p) = @_;
 
-    my $req = $c->req;
     my $service = $p->{service};
-    my $method = $req->method;
 
     my $status = Parse::Daemontools::Service->new->status($service);
     my $res = Omnis::Agent::Response->new(200);
