@@ -6,6 +6,8 @@ use 5.010;
 use Carp;
 use utf8;
 
+use Omnis::Agent::Response;
+
 sub new {
     my($class, $config, $os) = @_;
 
@@ -27,27 +29,25 @@ sub memory { croak "override me" }
 sub loadavg {
     my($self) = @_;
 
-    my $metric = {};
+    my $res = Omnis::Agent::Response->new(200);
 
     my @buf = qx{uptime};
     if ($? != 0) {
-        return { status => 500, message => $! }; # fixme
+        $res->status(500, $!);
+        return $res;
     }
 
     for (@buf) {
         if (/load average:\s*(.+)$/) {
             my @lav = split /,\s*/, $1;
-            $metric = {
-                1  => $lav[0],
-                5  => $lav[1],
-                15 => $lav[2],
-            };
+            $res->{1}  = $lav[0];
+            $res->{5}  = $lav[1];
+            $res->{15} = $lav[2];
             last;
         }
     }
 
-
-    return $metric;
+    return $res;
 }
 
 1;

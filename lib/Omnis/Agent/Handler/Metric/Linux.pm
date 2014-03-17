@@ -9,6 +9,7 @@ use utf8;
 use parent qw(Omnis::Agent::Handler::Metric::Base);
 
 use Omnis::Agent::Util;
+use Omnis::Agent::Response;
 use Omnis::Agent::Handler::Metric::LinuxAsync;
 
 our %MEMORY_ITEM = (
@@ -26,7 +27,7 @@ my $memory_item_re = '^(?:' . join('|', keys %MEMORY_ITEM) . '):';
 sub memory {
     my($self) = @_;
 
-    my $metric = {};
+    my $res = Omnis::Agent::Response->new(200);
 
     open my $fh, '<', '/proc/meminfo' or do {
         critf("%s", $!);
@@ -37,59 +38,59 @@ sub memory {
         chomp;
         my($key, $val) = split /[\s:]+/, $_, 2;
 
-        $metric->{$key =~ /^Swap/ ? 'swap' : 'memory' }{ $MEMORY_ITEM{$key} || "${key}_OOPS" } = to_byte($val);
+        $res->{$key =~ /^Swap/ ? 'swap' : 'memory' }{ $MEMORY_ITEM{$key} || "${key}_OOPS" } = to_byte($val);
     }
     close $fh;
 
-    $metric->{memory}{used} = $metric->{memory}{total} - $metric->{memory}{free} - $metric->{memory}{inactive};
+    $res->{memory}{used} = $res->{memory}{total} - $res->{memory}{free} - $res->{memory}{inactive};
 
-    $metric->{swap}{used} = $metric->{swap}{total} - $metric->{swap}{free};
+    $res->{swap}{used} = $res->{swap}{total} - $res->{swap}{free};
 
-    return $metric;
+    return $res;
 }
 
 sub loadavg {
     my($self) = @_;
 
-    my $metric = {};
+    my $res = Omnis::Agent::Response->new(200);
 
     open my $fh, '<', '/proc/loadavg' or do {
-        return { status => 500, message => $! }; # fixme
+        $res->status(500, $!);
+        return $res;
     };
     while (<$fh>) {
         if (my @e = split /\s+/) {
-            $metric = {
-                1  => $e[0],
-                5  => $e[1],
-                15 => $e[2],
-            };
+            $res->{1}  = $e[0];
+            $res->{5}  = $e[1];
+            $res->{15} = $e[2];
             last;
         }
     }
     close $fh;
 
-    return $metric;
+    return $res;
 }
 
 sub system {
     my($self) = @_;
 
-    my $metric = {};
+    my $res = Omnis::Agent::Response->new(200);
 
     open my $fh, '<', '/proc/stat' or do {
-        return { status => 500, message => $! }; # fixme
+        $res->status(500, $!);
+        return $res;
     };
     while (<$fh>) {
         next if /^cpu/;
         chomp;
         my($key, @val) = split /\s+/;
         if ($key =~ /^(?:intr|ctxt|btime|processes|procs_running|procs_blocked|softirq)$/) {
-            $metric->{$key} = $val[0];
+            $res->{$key} = $val[0];
         }
     }
     close $fh;
 
-    return $metric;
+    return $res;
 }
 
 1;

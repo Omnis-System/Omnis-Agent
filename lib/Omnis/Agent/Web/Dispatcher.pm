@@ -10,6 +10,7 @@ use Amon2::Web::Dispatcher::RouterBoom;
 use Log::Minimal;
 
 use Omnis::Agent::Util;
+use Omnis::Agent::Response;
 use Omnis::Agent::Handler::Fs;
 use Omnis::Agent::Handler::Command;
 use Omnis::Agent::Handler::Daemontools;
@@ -18,7 +19,11 @@ use Omnis::Agent::Handler::Metric;;
 any '/' => sub {
     my($c) = @_;
 
-    return $c->render_json({message => "Heeeeeeeeeeeellllloo"});
+    return $c->create_response(
+        200,
+        ["Content-Type", "text/plain"],
+        ["show help fixme\n"],
+    );
 };
 
 get '/metric/{metric}' => sub {
@@ -32,8 +37,7 @@ get '/metric/{metric}' => sub {
         };
         if ($@) {
             $c->{handler}{metric} = undef;
-            debugf("XXX: %s", $@);
-            return $c->res_404(); # fixme
+            return $c->render_json(Omnis::Agent::Response->new(404)->finalize);
         }
     }
 
@@ -41,13 +45,10 @@ get '/metric/{metric}' => sub {
     if ($c->{handler}{metric}->can($metric)) {
         $res = $c->{handler}{metric}->$metric();
     } else {
-        $res = {
-            status  => 501,
-            message => 'Not Implemented',
-        };
+        $res = Omnis::Agent::Response->new(501);
     }
 
-    return ref($res) eq 'HASH' ? $c->render_json($res) : $res;
+    return $c->render_json($res->finalize);
 };
 
 any '/fs/{path:.*}' => sub {
@@ -55,7 +56,7 @@ any '/fs/{path:.*}' => sub {
 
     my $res = Omnis::Agent::Handler::Fs::process($c, $p);
 
-    return ref($res) eq 'HASH' ? $c->render_json($res) : $res;
+    return $c->render_json($res->finalize);
 };
 
 get '/cmd/{path:.*}' => sub {
@@ -63,7 +64,7 @@ get '/cmd/{path:.*}' => sub {
 
     my $res = Omnis::Agent::Handler::Command::process($c, $p);
 
-    return ref($res) eq 'HASH' ? $c->render_json($res) : $res;
+    return $c->render_json($res->finalize);
 };
 
 get '/daemontools/{service}' => sub {
@@ -71,7 +72,7 @@ get '/daemontools/{service}' => sub {
 
     my $res = Omnis::Agent::Handler::Daemontools::process($c, $p);
 
-    return ref($res) eq 'HASH' ? $c->render_json($res) : $res;
+    return $c->render_json($res->finalize);
 };
 
 1;

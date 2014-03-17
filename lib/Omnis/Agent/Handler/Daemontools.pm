@@ -10,6 +10,7 @@ use Log::Minimal;
 use Parse::Daemontools::Service;
 
 use Omnis::Agent::Util;
+use Omnis::Agent::Response;
 
 sub process {
     my($c, $p) = @_;
@@ -19,12 +20,15 @@ sub process {
     my $method = $req->method;
 
     my $status = Parse::Daemontools::Service->new->status($service);
+    my $res = Omnis::Agent::Response->new(200);
 
     if ($status) {
-        return $status;
+        $res->copy($status);
     } else {
-        return { status => 500 }; # fixme
+        $res->status(500);
     }
+
+    return $res;
 }
 
 

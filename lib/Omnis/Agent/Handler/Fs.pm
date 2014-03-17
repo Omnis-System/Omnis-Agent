@@ -13,6 +13,7 @@ use POSIX qw(:errno_h);
 use IO::File::AtomicChange;
 
 use Omnis::Agent::Util;
+use Omnis::Agent::Response;
 
 sub process {
     my($c, $p) = @_;
@@ -21,24 +22,11 @@ sub process {
     my $path = '/' . $p->{path};
     my $method = $req->method;
 
-    my $res = {
-        status => 200,
-        path   => $path,
-    };
+    my $res = Omnis::Agent::Response->new(200);
 
     if ($method eq 'GET') {
         my $st = lstat($path) or do {
-            $res->{message} = $!;
-
-            my $errno = POSIX::errno;
-            if ($errno == EACCES) {
-                $res->{status}  = 403;
-            } elsif ($errno == ENOENT) {
-                $res->{status}  = 404;
-            } else {
-                $res->{status}  = 400;
-            }
-
+            set_error($res);
             goto RETURN;
         };
 
@@ -76,35 +64,15 @@ sub process {
             $res->{content} = "";
 
             if (S_ISREG($st->mode)) {
-                open my $fh, '<', $path or do { # fixme ↑と重複してる
-                    $res->{message} = $!;
-
-                    my $errno = POSIX::errno;
-                    if ($errno == EACCES) {
-                        $res->{status}  = 403;
-                    } elsif ($errno == ENOENT) {
-                        $res->{status}  = 404;
-                    } else {
-                        $res->{status}  = 400;
-                    }
-
+                open my $fh, '<', $path or do {
+                    set_error($res);
                     goto RETURN;
                 };
                 $res->{content} = do { local $/; <$fh> };
                 close $fh;
             } elsif (S_ISDIR($st->mode)) {
-                opendir my $dh, $path or do { # fixme ↑と重複してる
-                    $res->{message} = $!;
-
-                    my $errno = POSIX::errno;
-                    if ($errno == EACCES) {
-                        $res->{status}  = 403;
-                    } elsif ($errno == ENOENT) {
-                        $res->{status}  = 404;
-                    } else {
-                        $res->{status}  = 400;
-                    }
-
+                opendir my $dh, $path or do {
+                    set_error($res);
                     goto RETURN;
                 };
                 push @{ $res->{content} }, grep !/^\.{1,2}$/, readdir $dh;
@@ -124,28 +92,30 @@ sub process {
         my $fh = IO::File::AtomicChange->new($path, "w",
                                          { backup_dir => "/var/tmp/bk" })
             or do {
-                $res->{message} = $!;
-
-                my $errno = POSIX::errno;
-                if ($errno == EACCES) {
-                    $res->{status}  = 403;
-                } elsif ($errno == ENOENT) {
-                    $res->{status}  = 404;
-                } else {
-                    $res->{status}  = 400;
-                }
-
+                set_error($res);
                 goto RETURN;
             };
         $fh->print($content);
         $fh->close;
-
-        # my $qs = $req->query_parameters;
-        # p $qs;
     }
 
  RETURN:
     return $res;
+}
+
+sub set_error {
+    my($res) = @_;
+
+    $res->status(500, $!);
+
+    my $errno = POSIX::errno;
+    if ($errno == EACCES) {
+        $res->status(403);
+    } elsif ($errno == ENOENT) {
+        $res->status(404);
+    } else {
+        $res->status(400);
+    }
 }
 
 

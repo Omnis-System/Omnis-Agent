@@ -18,6 +18,7 @@ use Log::Minimal;
 use POSIX qw(sysconf _SC_CLK_TCK);
 
 use Omnis::Agent::Util;
+use Omnis::Agent::Response;
 
 sub async_metrics { return @Async_Metrics }
 
@@ -51,13 +52,15 @@ sub cpu_run {
 sub cpu {
     my($base) = @_;
 
+    my $res = Omnis::Agent::Response->new(200);
     my $sb = $base->scoreboard_reader;
     my $stats = $sb->read_all(); # fixme 効率悪いよねぇ
     if (my $json = $stats->{cpu}) {
-        return json->decode($json);
+        $res->copy(json->decode($json));
     } else {
-        return {}; # fixme
+        $res->status(500);
     }
+    return $res;
 }
 
 sub _cpu_time {

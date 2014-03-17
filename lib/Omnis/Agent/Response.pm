@@ -1,4 +1,4 @@
-package Omnis::Agent::Handler::Command;
+package Omnis::Agent::Response;
 
 use strict;
 use warnings;
@@ -6,52 +6,49 @@ use 5.010;
 use Carp;
 use utf8;
 
-use Log::Minimal;
-use IPC::Run;
-use IPC::Cmd;
+use HTTP::Status qw();
 
-use Omnis::Agent::Util;
-use Omnis::Agent::Response;
+sub new {
+    my($class, $code) = @_;
+    $code ||= 200;
 
-sub process {
-    my($c, $p) = @_;
+    my $self = bless {
+        code => $code,
+    }, $class;
 
-    my $req = $c->req;
-    my $path;
-    if ($p->{path} =~ m{/}) {
-        $path = '/' . $p->{path};
-    } else {
-        $path = IPC::Cmd::can_run($p->{path});
+    return $self;
+}
+
+sub status {
+    my($self, $code, $message) = @_;
+
+    $self->{code} = $code;
+    $self->{message} = $message if $message;
+    return $self->{code};
+}
+
+sub copy {
+    my($self, $newval) = @_;
+
+    for my $k (keys %$newval) {
+        $self->{$k} = $newval->{$k};
     }
-    my $method = $req->method;
+}
 
-    my $res = Omnis::Agent::Response->new(200);
+sub finalize {
+    my($self) = @_;
 
-    if ($method ne 'GET') {
-        $res->status(405);
-        return $res;
+    if (! HTTP::Status::is_success($self->{code}) && ! $self->{message}) {
+        $self->{message} = HTTP::Status::status_message($self->{code}) // 'Unknown';
     }
 
-    if (! -x $path) {
-        $res->status(403);
-        return $res;
-    }
+    return { %{ $self } };
+}
 
-    my @arg = $req->query_parameters->get_all('arg');
-    my $command = [$path, @arg];
+sub is_success {
+    my($self) = @_;
 
-    my($ok, $err, $full_buf, $stdout_buf, $stderr_buf) = IPC::Cmd::run(
-        command => $command,
-        timeout => 8,
-    );
-
-    unless ($ok) {
-        $res->status(500, $err);
-    }
-    $res->{stdout} = $stdout_buf;
-    $res->{stderr} = $stderr_buf;
-
-    return $res;
+    return HTTP::Status::is_success($self->{code});
 }
 
 
