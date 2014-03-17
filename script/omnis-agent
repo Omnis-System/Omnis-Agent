@@ -79,7 +79,10 @@ MAIN: {
 
     ### HTTP API server
     $proclet->service(
-        code => sub { run_agent($opt, $config) },
+        code => sub {
+            local $0 = "$0 (omnis: agent)";
+            run_agent($opt, $config);
+        },
         tag  => 'agent',
     );
 
@@ -92,12 +95,14 @@ MAIN: {
     my $metric = Omnis::Agent::Handler::Metric->new($config || +{});
     for my $async_metric ($metric->async_metrics) {
         infof("Starting async metric collector: %s", $async_metric);
+        my $tag = 'async_metric-'.$async_metric;
         $proclet->service(
             code => sub {
+                local $0 = "$0 (omnis: $tag)";
                 my $run = $async_metric . '_run';
                 $metric->$run();
             },
-            tag  => 'async_metric-'.$async_metric,
+            tag  => $tag,
         );
     }
 
